@@ -1,0 +1,995 @@
+#!/bin/bash
+
+/usr/bin/clear
+
+BASHLIST=(
+#  yum
+#  cron
+#  apcupsd
+#  ipv4
+#  ipv6
+#  localize
+#  lm_sensors
+#  vim
+#  sudo
+#  service
+#  selinux
+#  munin
+#  postfix
+  ssh
+#  minecraft
+)
+
+RUNLIST=()
+cur=0
+for curBash in ${BASHLIST[@]}
+do
+  while true
+  do
+    cur=$(expr $cur + 1)
+    read -p "("$cur"/"${#BASHLIST[@]}") Do you want to run '"$curBash"' script? [Y/n](default:Y): " ans
+    case $ans in
+      '' | [Yy]* )
+        RUNLIST+=("$curBash")
+        break;
+        ;;
+      [Nn]* )
+        break;
+        ;;
+      * )
+        echo "Please answer Y or n."
+    esac
+  done
+done
+
+setup_apcupsd () {
+  echo "Start setup apcupsd.";
+
+  if [ ! -f /etc/apcupsd/apcupsd.conf.org ]
+  then
+    cp -p /etc/apcupsd/apcupsd.conf /etc/apcupsd/apcupsd.conf.org
+  fi
+  sed -i -e 's/TIMEOUT 0/TIMEOUT 60/g' /etc/apcupsd/apcupsd.conf
+
+  while true
+  do
+    read -p "UPSサービスを有効にしますか? [Y/n](default:n): " ans
+    case $ans in
+      [Yy]* )
+        systemctl enable apcupsd.service
+        break;
+        ;;
+      '' | [Nn]* )
+        break;
+        ;;
+      * )
+        echo "Please answer Y or n."
+    esac
+  done
+}
+
+setup_cron () {
+  echo "Start setup cron.";
+
+  echo -n "cronエラーの通知先メアドを入力してください(default:admin@example.net): "
+  read mail
+  if [ -z "$mail" ]
+  then
+    mail="admin@example.net"
+  fi
+
+  cat << __EOS__ > /root/crontabs.org
+MAILTO="$mail"
+# Minute Hour Day Month Week command
+0 0 * * * screen -p 0 -S minecraft -X eval 'stuff "say 先生。日跨いだお！ (￣◇￣;)ｴｯ"\015' 1> /dev/null
+0 1 * * * screen -p 0 -S minecraft -X eval 'stuff "say 先生。そろそろ寝る時間ですよ(@￣ρ￣@)ｚｚｚｚ"\015' 1> /dev/null
+0 2 * * * screen -p 0 -S minecraft -X eval 'stuff "say 先生。先に寝てます(´-ω-)｡o○"\015' 1> /dev/null
+0 8 * * * screen -p 0 -S minecraft -X eval 'stuff "say 先生。おはよう～(´･ω･｀)"\015' 1> /dev/null
+1 */3 * * * bash /opt/minecraft/shell/backup.sh 1> /dev/null
+10 0 * * * bash /opt/minecraft/shell/clearlog.sh 1> /dev/null
+20 5 1 * * bash /opt/minecraft/shell/reset-mining.sh 1> /dev/null
+30 5 */3 * * bash /opt/minecraft/shell/reset-the-end.sh 1> /dev/null
+40 5 1 * * bash /opt/minecraft/shell/rotatelog.sh 1> /dev/null
+__EOS__
+
+  useradd minecraft
+  echo ""
+  echo ""
+  echo "マインクラフトユーザーを作成しました。パスワードを設定してください。"
+  passwd minecraft
+
+  crontab -u minecraft /root/crontabs.org
+  /bin/rm -f /root/crontabs.org
+}
+
+setup_ipv4 () {
+  echo "Start setup ipv4.";
+
+  if [ ! -f /etc/sysctl.conf.org ]
+  then
+    cp -p /etc/sysctl.conf /etc/sysctl.conf.org
+  fi
+
+  cat << '__EOS__' >> /etc/sysctl.conf
+net.ipv4.tcp_tw_recycle = 0
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_fin_timeout = 20
+__EOS__
+  sysctl -p
+}
+
+setup_ipv6 () {
+  echo "Start setup ipv6.";
+
+  # ip a
+  if [ ! -f /etc/sysctl.d/disable_ipv6.conf.org ]
+  then
+    cp -p /etc/sysctl.d/disable_ipv6.conf /etc/sysctl.d/disable_ipv6.conf.org
+  fi
+  echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.d/disable_ipv6.conf
+  echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.d/disable_ipv6.conf
+  sysctl -p /etc/sysctl.d/disable_ipv6.conf
+}
+
+setup_lm_sensors () {
+  echo "Start setup lm_sensors.";
+
+  yes "" | sensors-detect
+}
+
+setup_localize () {
+  echo "Start setup localize.";
+
+  # localectl list-locales | grep -i ja
+  localectl set-locale LANG=ja_JP.utf8
+
+  # timedatectl list-timezones | grep Tokyo
+  timedatectl set-timezone Asia/Tokyo
+
+  # localectl list-keymaps | grep jp
+  # localectl set-keymap jp106
+  # localectl
+
+}
+
+setup_munin () {
+  echo "Start setup munin.";
+
+  cd /etc/munin/plugins
+  cat << '__EOS__' > /etc/munin/plugins/minecraft
+#!/bin/sh
+
+MC_PORT=25565
+RH_VERSION=$(cat /etc/redhat-release | grep -Eo '[0-9]+' | head -1)
+
+if [ "$1" = "autoconf" ]
+then
+    printf "yes\n"
+    exit 0
+fi
+
+if [ "$1" = "config" ]
+then
+    printf 'graph_title Minecraft server\n'
+    printf 'graph_vlabel Number\n'
+    printf 'graph_category Minecraft\n'
+    printf 'users.label User\n'
+    printf 'ramusage.label Used RAM in GiB\n'
+    exit 0
+fi
+
+if [ $RH_VERSION -ge 7 ]
+then
+  PLAYERCOUNT=$(ss -tn | grep -i ${MC_PORT} | grep ESTAB | wc -l )
+else
+  PLAYERCOUNT=$(netstat -tn | grep -i ${MC_PORT} | grep ESTABLISHED | wc -l)
+fi
+
+MC_PID=$(ps -ef | grep 'spigot' | grep -v 'SCREEN' | grep -v 'grep' | awk '{print $2}')
+if [ ! -z "${MC_PID}" ]
+then #is running
+    MEMORYRSS=$(ps -p ${MC_PID} -o rss | grep -v RSS)
+    MEMGiB=$(echo "scale=2;${MEMORYRSS}/1024/1024" | bc -l)
+else
+    MEMGiB=0
+fi
+
+printf "users.value %i\n" "${PLAYERCOUNT}"
+printf "ramusage.value %3.2f\n" "${MEMGiB}"
+__EOS__
+
+
+  ln -s /usr/share/munin/plugins/sensors_ sensors_temp
+
+  if [ ! -f ./apcupsd_ww ]
+  then
+    wget https://raw.githubusercontent.com/munin-monitoring/contrib/master/plugins/power/apcupsd_ww
+  fi
+  cp -p ./apcupsd_ww /etc/munin/plugins/apcupsd_ww
+
+  echo -n "muninでping監視したいゲートウェイアドレスを指定してください。(default:192.168.1.1): "
+  read chkipaddr
+  if [ -z "$chkipaddr" ]
+  then
+    chkipaddr="192.168.1.1"
+  fi
+  ln -s /usr/share/munin/plugins/ping_ /etc/munin/plugins/ping_$chkipaddr
+
+  echo -n "muninでping監視したいドメインを指定してください。(default:example.net): "
+  read 
+  if [ -z "$chkdomain" ]
+  then
+    chkdomain="example.net"
+  fi
+  ln -s /usr/share/munin/plugins/ping_ /etc/munin/plugins/ping_$chkdomain
+
+  if [ ! -f  /etc/munin/munin-node.conf.org ]
+  then
+    cp -p  /etc/munin/munin-node.conf  /etc/munin/munin-node.conf.org
+  fi
+  sed -i -e 's/localhost.localdomain/'`hostname`'/g' /etc/munin/munin-node.conf
+
+  echo -n "muninのサーバーアドレスを入力してください。(default:192.168.1.1): "
+  read serveripaddr
+  if [ -z "$serveripaddr" ]
+  then
+    serveripaddr="192.168.1.1"
+  fi
+  serveripaddr=${serveripaddr//./\\\\.}
+  sed -i -e "/^allow \^::1\$$/a allow \^"$serveripaddr"\$" /etc/munin/munin-node.conf
+
+  if [ ! -f /etc/munin/plugin-conf.d/munin-node.org ]
+  then
+    cp -p /etc/munin/plugin-conf.d/munin-node /etc/munin/plugin-conf.d/munin-node.org
+  fi
+  echo "" >> /etc/munin/plugin-conf.d/munin-node
+  echo "[sensors_*]" >> /etc/munin/plugin-conf.d/munin-node
+  echo "user root" >> /etc/munin/plugin-conf.d/munin-node
+
+  cat << '__EOS__' > /etc/firewalld/services/munin-node.xml
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>munin-node</short>
+  <description>munin-node</description>
+  <port protocol="tcp" port="4949"/>
+</service>
+__EOS__
+  firewall-cmd --reload
+  firewall-cmd --permanent --add-service=munin-node
+
+  systemctl enable munin-node.service
+}
+
+setup_postfix () {
+  echo "Start setup postfix.";
+
+  if [ ! -f /etc/postfix/main.cf.org ]
+  then
+    cp -p /etc/postfix/main.cf /etc/postfix/main.cf.org
+  fi
+
+  cat << '__EOS__' > /etc/postfix/main.cf
+queue_directory = /var/spool/postfix
+command_directory = /usr/sbin
+daemon_directory = /usr/libexec/postfix
+data_directory = /var/lib/postfix
+mail_owner = postfix
+inet_interfaces = localhost
+inet_protocols = ipv4
+mydestination = $myhostname, localhost.$mydomain, localhost
+unknown_local_recipient_reject_code = 550
+relayhost = 192.168.1.1
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+debug_peer_level = 2
+debugger_command =
+	 PATH=/bin:/usr/bin:/usr/local/bin:/usr/X11R6/bin
+	 ddd $daemon_directory/$process_name $process_id & sleep 5
+sendmail_path = /usr/sbin/sendmail.postfix
+newaliases_path = /usr/bin/newaliases.postfix
+mailq_path = /usr/bin/mailq.postfix
+setgid_group = postdrop
+html_directory = no
+manpage_directory = /usr/share/man
+sample_directory = /usr/share/doc/postfix-2.10.1/samples
+readme_directory = /usr/share/doc/postfix-2.10.1/README_FILES
+__EOS__
+
+  echo -n "postfixが利用するrelayhostを入力してください。(default:192.168.1.1): "
+  read serveripaddr
+  if [ -z "$serveripaddr" ]
+  then
+    serveripaddr="192.168.1.1"
+  fi
+  sed -i -e "s/192.168.1.1/"$serveripaddr"/g" /etc/postfix/main.cf 
+
+  systemctl enable postfix.service
+  systemctl start postfix.service
+  systemctl restart postfix.service
+}
+
+setup_selinux () {
+  echo "Start setup selinux.";
+
+  if [ ! -f /etc/selinux/config.org ]
+  then 
+    cp -p /etc/selinux/config /etc/selinux/config.org
+  fi
+  sed -i -e 's/=enforcing/=disabled/g' /etc/selinux/config
+}
+
+setup_service () {
+  echo "Start setup service.";
+
+  # systemctl list-units --type=service
+  # systemctl list-unit-files | grep enabled
+  systemctl disable auditd.service
+  systemctl disable kdump.service
+  systemctl disable chronyd.service
+  systemctl disable wpa_supplicant
+  systemctl disable NetworkManager
+
+}
+
+setup_ssh () {
+  echo "Start setup ssh.";
+
+  if [ ! -f ~/.ssh/id_rsa.pub ]
+  then
+    mkdir -p ~/.ssh
+    ssh-keygen -t rsa -b 4096      # Create key pair.RSA 4096bit
+    cp -p ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+  fi
+
+  cat << '__EOS__' > ~/.ssh/config
+Host host1.example.net
+  HostName            192.168.1.1
+  Port                22
+  User                root
+  IdentityFile        /home/dummy/.ssh/id_rsa_host1
+  ServerAliveInterval 60
+  UseRoaming no
+Host host2.example.net
+  HostName            192.168.1.2
+  Port                22
+  User                root
+  IdentityFile        /home/dummy/.ssh/id_rsa_host1
+  ServerAliveInterval 60
+  UseRoaming no
+Host host3.example.net
+  HostName            192.168.1.3
+  Port                22
+  User                root
+  IdentityFile        /home/dummy/.ssh/id_rsa_host1
+  ServerAliveInterval 60
+  UseRoaming no
+__EOS__
+
+  cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config.org
+  cat << '__EOS__' > /etc/ssh/sshd_config
+Port 22
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+SyslogFacility AUTHPRIV
+PermitRootLogin yes
+RSAAuthentication yes
+PubkeyAuthentication yes
+AuthorizedKeysFile	.ssh/authorized_keys
+PasswordAuthentication no
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+GSSAPIAuthentication yes
+GSSAPICleanupCredentials no
+UsePAM yes
+X11Forwarding yes
+UsePrivilegeSeparation sandbox		# Default for new installations.
+AcceptEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
+AcceptEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
+AcceptEnv LC_IDENTIFICATION LC_ALL LANGUAGE
+AcceptEnv XMODIFIERS
+Subsystem	sftp	/usr/libexec/openssh/sftp-server
+__EOS__
+
+  # firewall-cmd --state
+  # firewall-cmd --list-all
+  # firewall-cmd --list-all-zones
+  # firewall-cmd --list-all --zone=public
+  # ss -antup
+  # ip addr
+  cat << '__EOS__' > /etc/firewalld/services/ssh.xml
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>SSH</short>
+  <description>Secure Shell (SSH) is a protocol for logging into and executing commands on remote machines. It provides secure encrypted communications. If you plan on accessing your machine remotely via SSH over a firewalled interface, enable this option. You need the openssh-server package installed for this option to be useful.</description>
+  <port protocol="tcp" port="22"/>
+</service>
+__EOS__
+
+  echo -n "sshが利用するportを入力してください。(default:22): "
+  read serverport
+  if [ -z "$serverport" ]
+  then
+    serverport="22"
+  fi
+  sed -i -e "s/22/"$serverport"/g" ~/.ssh/config
+  sed -i -e "s/22/"$serverport"/g" /etc/ssh/sshd_config
+  sed -i -e "s/22/"$serverport"/g" /etc/firewalld/services/ssh.xml
+
+  firewall-cmd --reload
+  firewall-cmd --permanent --add-service=ssh
+  chmod 600 /root/.ssh
+  chmod 600 -R /root/.ssh
+  systemctl restart sshd.service
+  echo "*************** SSH PRIVATE KEY START ***************"
+  echo " SSH接続する際に必要になりますので、下記は必ず控えを取ってください。"
+  cat ~/.ssh/id_rsa
+  echo " SSH接続する際に必要になりますので、上記は必ず控えを取ってください。"
+  echo "*************** SSH PRIVATE KEY END ***************"
+  read ans
+  echo "画面をリフレッシュします。SSH PRIVATE KEYを保存している場合は、何かキーを押して続行してください。"
+  read ans
+}
+
+setup_sudo () {
+  echo "Start setup sudo.";
+
+  if [ ! -f /etc/sudoers.org ]
+  then
+    cp -p /etc/sudoers /etc/sudoers.org
+  fi
+  echo "" >> /etc/sudoers
+  echo "# add minecraft user systemctl" >> /etc/sudoers
+  echo "Cmnd_Alias MINECRAFT_SERVICE = /bin/systemctl * minecraft.service" >> /etc/sudoers
+  echo "minecraft    ALL=NOPASSWD: MINECRAFT_SERVICE" >> /etc/sudoers
+  echo "" >> /etc/sudoers
+}
+
+setup_vim () {
+  echo "Start setup vim.";
+
+  cat << '__EOS__' > ~/.vimrc
+:map mp :'s,'ey<LF>p
+:set tabstop=4
+:set noautoindent
+:set expandtab
+:set shiftwidth=4
+__EOS__
+
+  cat << '__EOS__' >> ~/.bashrc
+
+alias vi='vim'
+__EOS__
+}
+
+setup_yum () {
+  echo "Start setup yum.";
+
+  if [ ! -f ./wget-1.14-15.el7_4.1.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ wget
+  fi
+  yum -y localinstall ./wget-*.x86_64.rpm
+
+  if [ ! -f ./bind-libs-9.9.4-61.el7.x86_64.rpm ] \
+    || [ ! -f ./bind-utils-9.9.4-61.el7.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ bind-utils
+  fi
+  yum -y localinstall ./bind-utils-*.x86_64.rpm
+
+  if [ ! -f ./expect-5.45-14.el7_1.x86_64.rpm ] \
+    || [ ! -f ./tcl-8.5.13-8.el7.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ expect
+  fi
+  yum -y localinstall ./expect-*.x86_64.rpm
+
+  if [ ! -f ./bc-1.06.95-13.el7.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ bc
+  fi
+  yum -y localinstall ./bc-*.x86_64.rpm
+    
+  if [ ! -f ./glibc-headers-2.17-222.el7.x86_64.rpm ] \
+    || [ ! -f ./libgcc-4.8.5-28.el7_5.1.x86_64.rpm ] \
+    || [ ! -f ./glibc-devel-2.17-222.el7.x86_64.rpm ] \
+    || [ ! -f ./libgomp-4.8.5-28.el7_5.1.x86_64.rpm ] \
+    || [ ! -f ./libmpc-1.0.1-3.el7.x86_64.rpm ] \
+    || [ ! -f ./mpfr-3.1.1-4.el7.x86_64.rpm ] \
+    || [ ! -f ./cpp-4.8.5-28.el7_5.1.x86_64.rpm ] \
+    || [ ! -f ./kernel-headers-3.10.0-862.9.1.el7.x86_64.rpm ] \
+    || [ ! -f ./gcc-4.8.5-28.el7_5.1.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ gcc
+  fi
+  yum -y localinstall ./glibc-headers-*.x86_64.rpm ./libgcc-*.x86_64.rpm \
+    ./glibc-devel-*.x86_64.rpm ./libgomp-*.x86_64.rpm ./libmpc-*.x86_64.rpm ./mpfr-*.x86_64.rpm \
+    ./cpp-*.x86_64.rpm ./kernel-headers-*.x86_64.rpm ./gcc-*.x86_64.rpm
+
+  if [ ! -f ./libstdc++-4.8.5-28.el7_5.1.x86_64.rpm ] \
+    || [ ! -f ./libstdc++-devel-4.8.5-28.el7_5.1.x86_64.rpm ] \
+    || [ ! -f ./gcc-c++-4.8.5-28.el7_5.1.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ gcc-c++
+  fi
+  yum -y localinstall ./libstdc++-*.x86_64.rpm ./libstdc++-devel-*.x86_64.rpm ./gcc-c++-*.x86_64.rpm
+
+  if [ ! -f ./gdb-7.6.1-110.el7.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ gdb
+  fi
+  yum -y localinstall ./gdb-*.x86_64.rpm
+
+  if [ ! -f ./lm_sensors-3.4.0-4.20160601gitf9185e5.el7.x86_64.rpm  ]
+  then
+    yum install --downloadonly --downloaddir=./ lm_sensors
+  fi
+  yum -y localinstall ./lm_sensors-*.x86_64.rpm 
+
+  if [ ! -f ./tcpdump-4.9.2-3.el7.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ tcpdump
+  fi
+  yum -y localinstall ./tcpdump-*.x86_64.rpm
+
+
+  if [ ! -f ./telnet-0.17-64.el7.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ telnet
+  fi
+  yum -y localinstall ./telnet-*.x86_64.rpm
+
+  if [ ! -f ./iotop-0.6-2.el7.noarch.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ iotop
+  fi
+  yum -y localinstall ./iotop-*.noarch.rpm
+ 
+  if [ ! -f ./GeoIP-data-1.5.0-11.el7.noarch.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ GeoIP-data
+  fi
+  yum -y localinstall ./GeoIP-data-*.noarch.rpm
+ 
+  if [ ! -f ./GeoIP-update-1.5.0-11.el7.noarch.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ GeoIP-update
+  fi
+  yum -y localinstall ./GeoIP-update-*.noarch.rpm
+
+  if [ ! -f ./perl-Error-0.17020-2.el7.noarch.rpm ] \
+    || [ ! -f ./perl-TermReadKey-2.30-20.el7.x86_64.rpm ] \
+    || [ ! -f ./libgnome-keyring-3.12.0-1.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Git-1.8.3.1-14.el7_5.noarch.rpm ] \
+    || [ ! -f ./rsync-3.1.2-4.el7.x86_64.rpm ] \
+    || [ ! -f ./git-1.8.3.1-14.el7_5.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ git
+  fi
+  yum -y localinstall ./perl-Error-0.17020-2.el7.noarch.rpm ./perl-TermReadKey-2.30-20.el7.x86_64.rpm \
+    ./libgnome-keyring-3.12.0-1.el7.x86_64.rpm ./perl-Git-1.8.3.1-14.el7_5.noarch.rpm \
+    ./rsync-3.1.2-4.el7.x86_64.rpm ./git-1.8.3.1-14.el7_5.x86_64.rpm
+
+  if [ ! -f ./fontpackages-filesystem-1.44-8.el7.noarch.rpm ] \
+    || [ ! -f ./copy-jdk-configs-3.3-10.el7_5.noarch.rpm ] \
+    || [ ! -f ./giflib-4.1.6-9.el7.x86_64.rpm ] \
+    || [ ! -f ./javapackages-tools-3.4.1-11.el7.noarch.rpm ] \
+    || [ ! -f ./java-1.8.0-openjdk-1.8.0.181-3.b13.el7_5.x86_64.rpm ] \
+    || [ ! -f ./libSM-1.2.2-2.el7.x86_64.rpm ] \
+    || [ ! -f ./fontconfig-2.10.95-11.el7.x86_64.rpm ] \
+    || [ ! -f ./libICE-1.0.9-9.el7.x86_64.rpm ] \
+    || [ ! -f ./libXau-1.0.8-2.1.el7.x86_64.rpm ] \
+    || [ ! -f ./libXcomposite-0.4.4-4.1.el7.x86_64.rpm ] \
+    || [ ! -f ./libX11-common-1.6.5-1.el7.noarch.rpm ] \
+    || [ ! -f ./libXext-1.3.3-3.el7.x86_64.rpm ] \
+    || [ ! -f ./libXi-1.7.9-1.el7.x86_64.rpm ] \
+    || [ ! -f ./libX11-1.6.5-1.el7.x86_64.rpm ] \
+    || [ ! -f ./libXtst-1.2.3-1.el7.x86_64.rpm ] \
+    || [ ! -f ./libXrender-0.9.10-1.el7.x86_64.rpm ] \
+    || [ ! -f ./libfontenc-1.1.3-3.el7.x86_64.rpm ] \
+    || [ ! -f ./libXfont-1.5.2-1.el7.x86_64.rpm ] \
+    || [ ! -f ./libjpeg-turbo-1.2.90-5.el7.x86_64.rpm ] \
+    || [ ! -f ./lksctp-tools-1.0.17-2.el7.x86_64.rpm ] \
+    || [ ! -f ./libpng-1.5.13-7.el7_2.x86_64.rpm ] \
+    || [ ! -f ./libxslt-1.1.28-5.el7.x86_64.rpm ] \
+    || [ ! -f ./lyx-fonts-2.2.3-1.el7.noarch.rpm ] \
+    || [ ! -f ./nss-softokn-3.36.0-5.el7_5.x86_64.rpm ] \
+    || [ ! -f ./nss-3.36.0-5.el7_5.x86_64.rpm ] \
+    || [ ! -f ./nss-softokn-freebl-3.36.0-5.el7_5.x86_64.rpm ] \
+    || [ ! -f ./nspr-4.19.0-1.el7_5.x86_64.rpm ] \
+    || [ ! -f ./nss-sysinit-3.36.0-5.el7_5.x86_64.rpm ] \
+    || [ ! -f ./nss-util-3.36.0-1.el7_5.x86_64.rpm ] \
+    || [ ! -f ./libxcb-1.12-1.el7.x86_64.rpm ] \
+    || [ ! -f ./nss-tools-3.36.0-5.el7_5.x86_64.rpm ] \
+    || [ ! -f ./tzdata-java-2018e-3.el7.noarch.rpm ] \
+    || [ ! -f ./ttmkfdir-3.0.9-42.el7.x86_64.rpm ] \
+    || [ ! -f ./python-lxml-3.2.1-4.el7.x86_64.rpm ] \
+    || [ ! -f ./xorg-x11-font-utils-7.5-20.el7.x86_64.rpm ] \
+    || [ ! -f ./python-javapackages-3.4.1-11.el7.noarch.rpm ] \
+    || [ ! -f ./xorg-x11-fonts-Type1-7.5-9.el7.noarch.rpm ] \
+    || [ ! -f ./java-1.8.0-openjdk-headless-1.8.0.181-3.b13.el7_5.x86_64.rpm ]        
+  then
+    yum install --downloadonly --downloaddir=./ java-1.8.0-openjdk
+  fi
+  yum -y localinstall ./fontpackages-filesystem-1.44-8.el7.noarch.rpm ./copy-jdk-configs-3.3-10.el7_5.noarch.rpm \
+    ./giflib-4.1.6-9.el7.x86_64.rpm ./javapackages-tools-3.4.1-11.el7.noarch.rpm \
+   ./java-1.8.0-openjdk-1.8.0.181-3.b13.el7_5.x86_64.rpm ./libSM-1.2.2-2.el7.x86_64.rpm \
+   ./fontconfig-2.10.95-11.el7.x86_64.rpm ./libICE-1.0.9-9.el7.x86_64.rpm \
+   ./libXau-1.0.8-2.1.el7.x86_64.rpm ./libXcomposite-0.4.4-4.1.el7.x86_64.rpm \
+   ./libX11-common-1.6.5-1.el7.noarch.rpm ./libXext-1.3.3-3.el7.x86_64.rpm \
+   ./libXi-1.7.9-1.el7.x86_64.rpm ./libX11-1.6.5-1.el7.x86_64.rpm \
+   ./libXtst-1.2.3-1.el7.x86_64.rpm ./libXrender-0.9.10-1.el7.x86_64.rpm \
+   ./libfontenc-1.1.3-3.el7.x86_64.rpm ./libXfont-1.5.2-1.el7.x86_64.rpm \
+   ./libjpeg-turbo-1.2.90-5.el7.x86_64.rpm ./lksctp-tools-1.0.17-2.el7.x86_64.rpm \
+   ./libpng-1.5.13-7.el7_2.x86_64.rpm ./libxslt-1.1.28-5.el7.x86_64.rpm \
+   ./lyx-fonts-2.2.3-1.el7.noarch.rpm ./nss-softokn-3.36.0-5.el7_5.x86_64.rpm \
+   ./nss-3.36.0-5.el7_5.x86_64.rpm ./nss-softokn-freebl-3.36.0-5.el7_5.x86_64.rpm \
+   ./nspr-4.19.0-1.el7_5.x86_64.rpm ./nss-sysinit-3.36.0-5.el7_5.x86_64.rpm \
+   ./nss-util-3.36.0-1.el7_5.x86_64.rpm ./libxcb-1.12-1.el7.x86_64.rpm \
+   ./nss-tools-3.36.0-5.el7_5.x86_64.rpm ./tzdata-java-2018e-3.el7.noarch.rpm \
+   ./ttmkfdir-3.0.9-42.el7.x86_64.rpm ./python-lxml-3.2.1-4.el7.x86_64.rpm \
+   ./xorg-x11-font-utils-7.5-20.el7.x86_64.rpm ./python-javapackages-3.4.1-11.el7.noarch.rpm \
+   ./xorg-x11-fonts-Type1-7.5-9.el7.noarch.rpm ./java-1.8.0-openjdk-headless-1.8.0.181-3.b13.el7_5.x86_64.rpm
+
+  if [ ! -f ./screen-4.1.0-0.25.20120314git3c2946.el7.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ screen
+  fi
+  yum -y localinstall ./screen-*.x86_64.rpm
+
+  if [ ! -f ./vim-filesystem-7.4.160-4.el7.x86_64.rpm ] \
+    || [ ! -f ./gpm-libs-1.20.7-5.el7.x86_64.rpm ] \
+    || [ ! -f ./vim-enhanced-7.4.160-4.el7.x86_64.rpm ] \
+    || [ ! -f ./vim-common-7.4.160-4.el7.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ vim
+  fi
+  yum -y localinstall ./vim-filesystem-*.x86_64.rpm ./gpm-libs-*.x86_64.rpm ./vim-enhanced-*.x86_64.rpm ./vim-common-*.x86_64.rpm
+
+  if [ ! -f ./epel-release-latest-7.noarch.rpm ]
+  then
+    wget http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+  fi
+  rpm -ivh ./epel-release-latest-7.noarch.rpm
+
+  if [ ! -f ./apcupsd-3.14.14-5.el7.x86_64.rpm ] \
+    || [ ! -f ./libusb-0.1.4-3.el7.x86_64.rpm ] \
+    || [ ! -f ./libusbx-1.0.21-1.el7.x86_64.rpm ] \
+    || [ ! -f ./mailx-12.5-19.el7.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ --enablerepo=epel apcupsd
+  fi
+  yum -y localinstall ./apcupsd-*.x86_64.rpm ./libusb-*.x86_64.rpm ./libusbx-*.x86_64.rpm ./mailx-*.x86_64.rpm
+
+  if [ ! -f ./iftop-1.0-0.14.pre4.el7.x86_64.rpm ] \
+    || [ ! -f ./libpcap-1.5.3-11.el7.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ --enablerepo=epel iftop  
+  fi
+  yum -y localinstall ./iftop-*.x86_64.rpm
+
+  if [ ! -f ./lm_sensors-libs-3.4.0-4.20160601gitf9185e5.el7.x86_64.rpm ] \
+    || [ ! -f ./mailcap-2.1.41-2.el7.noarch.rpm ] \
+    || [ ! -f ./hdparm-9.43-5.el7.x86_64.rpm ] \
+    || [ ! -f ./munin-common-2.0.33-1.el7.noarch.rpm ] \
+    || [ ! -f ./munin-node-2.0.33-1.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Business-ISBN-2.06-2.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Carp-1.26-244.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Business-ISBN-Data-20120719.001-2.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Compress-Raw-Zlib-2.061-4.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Compress-Raw-Bzip2-2.061-3.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-5.16.3-292.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-DBD-Pg-2.19.3-4.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Data-Dumper-2.145-3.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Crypt-DES-2.05-20.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Digest-1.17-245.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Digest-MD5-2.52-3.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-DBI-1.627-4.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Digest-HMAC-1.03-5.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Digest-SHA-5.85-4.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Digest-SHA1-2.13-9.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-File-Listing-6.04-7.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Encode-2.51-7.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-File-Path-2.09-2.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Filter-1.49-3.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-File-Temp-0.23.01-3.el7.noarch.rpm ] \
+    || [ ! -f ./perl-HTML-Parser-3.71-4.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Getopt-Long-2.40-3.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Exporter-5.68-3.el7.noarch.rpm ] \
+    || [ ! -f ./perl-HTTP-Cookies-6.01-5.el7.noarch.rpm ] \
+    || [ ! -f ./perl-HTML-Tagset-3.20-15.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Encode-Locale-1.03-5.el7.noarch.rpm ] \
+    || [ ! -f ./perl-HTTP-Date-6.02-8.el7.noarch.rpm ] \
+    || [ ! -f ./perl-HTTP-Daemon-6.01-7.el7.noarch.rpm ] \
+    || [ ! -f ./perl-IO-Compress-2.061-2.el7.noarch.rpm ] \
+    || [ ! -f ./perl-HTTP-Negotiate-6.01-5.el7.noarch.rpm ] \
+    || [ ! -f ./perl-HTTP-Tiny-0.033-3.el7.noarch.rpm ] \
+    || [ ! -f ./perl-IO-HTML-1.00-2.el7.noarch.rpm ] \
+    || [ ! -f ./perl-IO-Multiplex-1.13-6.el7.noarch.rpm ] \
+    || [ ! -f ./perl-IO-Socket-SSL-1.94-7.el7.noarch.rpm ] \
+    || [ ! -f ./perl-LWP-MediaTypes-6.02-2.el7.noarch.rpm ] \
+    || [ ! -f ./perl-List-MoreUtils-0.33-9.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-HTTP-Message-6.06-6.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Mozilla-CA-20130114-5.el7.noarch.rpm ] \
+    || [ ! -f ./perl-IO-Socket-IP-0.21-5.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Net-CIDR-0.18-1.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Net-LibIDN-0.12-15.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Net-Daemon-0.48-5.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Net-DNS-0.72-6.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Net-HTTP-6.06-2.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Net-SNMP-6.0.1-7.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Net-SSLeay-1.55-6.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Pod-Perldoc-3.20-4.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Net-Server-2.007-2.el7.noarch.rpm ] \
+    || [ ! -f ./perl-PathTools-3.40-5.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Pod-Usage-1.63-3.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Pod-Simple-3.28-4.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Pod-Escapes-1.04-292.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Scalar-List-Utils-1.27-248.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-PlRPC-0.2020-14.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Socket-2.010-4.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Socket6-0.23-15.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Text-ParseWords-3.29-4.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Sys-Syslog-0.33-3.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Time-HiRes-1.9725-3.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-Time-Local-1.2300-2.el7.noarch.rpm ] \
+    || [ ! -f ./perl-TimeDate-2.30-2.el7.noarch.rpm ] \
+    || [ ! -f ./perl-URI-1.60-9.el7.noarch.rpm ] \
+    || [ ! -f ./perl-WWW-RobotRules-6.02-5.el7.noarch.rpm ] \
+    || [ ! -f ./perl-Storable-2.45-3.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-XML-NamespaceSupport-1.11-10.el7.noarch.rpm ] \
+    || [ ! -f ./perl-XML-LibXML-2.0018-5.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-XML-SAX-0.99-9.el7.noarch.rpm ] \
+    || [ ! -f ./perl-XML-Parser-2.41-10.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-XML-SAX-Base-1.08-7.el7.noarch.rpm ] \
+    || [ ! -f ./perl-constant-1.27-2.el7.noarch.rpm ] \
+    || [ ! -f ./perl-parent-0.225-244.el7.noarch.rpm ] \
+    || [ ! -f ./perl-libwww-perl-6.05-2.el7.noarch.rpm ] \
+    || [ ! -f ./perl-macros-5.16.3-292.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-threads-1.87-4.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-podlators-2.5.1-3.el7.noarch.rpm ] \
+    || [ ! -f ./perl-threads-shared-1.43-6.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-libs-5.16.3-292.el7.x86_64.rpm ] \
+    || [ ! -f ./perl-version-0.99.07-3.el7.x86_64.rpm ] \
+    || [ ! -f ./postgresql-libs-9.2.23-3.el7_4.x86_64.rpm ] \
+    || [ ! -f ./sysstat-10.1.5-13.el7.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ --enablerepo=epel munin-node
+  fi
+  yum -y localinstall ./lm_sensors-libs-*.x86_64.rpm ./mailcap-*.noarch.rpm \
+    ./hdparm-*.x86_64.rpm ./munin-common-*.noarch.rpm ./munin-node-*.noarch.rpm ./perl-*.noarch.rpm \
+    ./perl-*.x86_64.rpm ./postgresql-libs-*.x86_64.rpm ./sysstat-*.x86_64.rpm
+
+  if [ ! -f ./nkf-2.1.3-5.el7.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ --enablerepo=epel nkf
+  fi
+  yum -y localinstall ./nkf-*.x86_64.rpm
+}
+
+setup_minecraft () {
+  echo "Start setup minecraft.";
+
+  useradd minecraft
+  passwd minecraft
+
+  build_dir='/opt/build_minecraft/'`date +%Y%m%d`'/'
+  mkdir -p $build_dir
+  cd $build_dir
+  if [ -f ./BuildTools.jar ]
+  then
+    wget https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar
+  fi
+  java -jar ./BuildTools.jar
+  cp ./spigot-*.jar /opt/minecraft/
+
+  cat << '__EOS__' > /opt/minecraft/environments
+JAVA_OPTIONS='-Dfile.encoding=UTF-8 -Xms7G -Xmx13G -XX:+UseG1GC -XX:MaxGCPauseMillis=50'
+JAR_SPIGOT='spigot-1.12.2.jar'
+JAR_OPTIONS='nogui'
+__EOS__
+
+  cat << '__EOS__' > /etc/firewalld/services/minecraft.xml
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>Minecraft Server</short>
+  <description>Minecraft Server</description>
+  <port protocol="tcp" port="25565"/>
+</service>
+__EOS__
+  cat << '__EOS__' > /etc/firewalld/services/minecraft-votifier.xml
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>Minecraft Votifier</short>
+  <description>Minecraft Votifier</description>
+  <port protocol="tcp" port="8192"/>
+</service>
+__EOS__
+  cat << '__EOS__' > /etc/firewalld/services/minecraft-dynmap.xml
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>Minecraft Dynmap</short>
+  <description>Minecraft Dynmap</description>
+  <port protocol="tcp" port="8123"/>
+</service>
+__EOS__
+  firewall-cmd --reload
+  firewall-cmd --permanent --add-service=minecraft
+  firewall-cmd --permanent --add-service=minecraft-votifier
+  firewall-cmd --permanent --add-service=minecraft-dynmap
+
+  cat << '__EOS__' > /etc/systemd/system/minecraft.service
+[Unit]
+Description=Minecraft Server
+Requires=network.target local-fs.target
+After=network.target local-fs.target
+
+[Service]
+RemainAfterExit=yes
+Restart=always
+User=minecraft
+Group=minecraft
+EnvironmentFile=/opt/minecraft/environments
+WorkingDirectory=/opt/minecraft
+ExecStart=/usr/bin/screen -AmdS minecraft /usr/bin/java $JAVA_OPTIONS -jar $JAR_SPIGOT $JAR_OPTIONS
+ExecReload=/usr/bin/screen -p 0 -S minecraft -X eval 'stuff "say メンテナンスの為、5秒後に鯖をリロードします"\015'
+ExecReload=/usr/bin/screen -p 0 -S minecraft -X eval 'stuff "say 一時的にラグが発生しますがご了承ください"\015'
+ExecReload=/usr/bin/sleep 5
+ExecReload=/usr/bin/screen -p 0 -S minecraft -X eval 'stuff "reload"\015'
+ExecReload=/usr/bin/screen -p 0 -S minecraft -X eval 'stuff "say リロードが完了しました"\015'
+ExecStop=/usr/bin/screen -p 0 -S minecraft -X eval 'stuff "say メンテナンスの為、5秒後に鯖を停止します"\015'
+ExecStop=/usr/bin/screen -p 0 -S minecraft -X eval 'stuff "say 自動的に切断されますので、ご了承ください"\015'
+ExecStop=/usr/bin/screen -p 0 -S minecraft -X eval 'stuff "save-all"\015'
+ExecStop=/usr/bin/sleep 5
+ExecStop=/usr/bin/screen -p 0 -S minecraft -X eval 'stuff "stop"\015'
+ExecStop=/usr/bin/sleep 10
+ExecStop=/usr/bin/sync
+
+[Install]
+WantedBy=multi-user.target
+__EOS__
+
+  systemctl daemon-reload
+  systemctl enable minecraft.service
+  # echo "Detaching From Screen: Ctrl + A + D"
+  # su - minecraft -c "screen -R minecraft"
+
+  mkdir -p /opt/minecraft/shell/
+  cat << '__EOS__' > /opt/minecraft/shell/clearlog.sh
+#!/bin/bash
+
+find /opt/minecraft/logs/*.log.gz -mtime +31 | xargs /bin/rm -f
+__EOS__
+
+  cat << '__EOS__' > /opt/minecraft/shell/reset-mining.sh
+#!/bin/bash
+
+screen -p 0 -S minecraft -X eval 'stuff "say 5分後に全資源ワールドの初期化を開始します"\015'
+screen -p 0 -S minecraft -X eval 'stuff "say 資源ワールドにいる方はワールド外へ退避してください"\015'
+sleep 300
+
+screen -p 0 -S minecraft -X eval 'stuff "say 資源ワールド(NORMAL)の初期化を開始します"\015'
+screen -p 0 -S minecraft -X eval 'stuff "mv regen world_mining -S"\015'
+screen -p 0 -S minecraft -X eval 'stuff "mvconfirm"\015'
+sleep 30
+
+screen -p 0 -S minecraft -X eval 'stuff "say 資源ワールド(NETHER)の初期化を開始します"\015'
+screen -p 0 -S minecraft -X eval 'stuff "mv regen world_mining_nether -S"\015'
+screen -p 0 -S minecraft -X eval 'stuff "mvconfirm"\015'
+sleep 30
+
+screen -p 0 -S minecraft -X eval 'stuff "say 再読み込みをします"\015'
+screen -p 0 -S minecraft -X eval 'stuff "reload"\015'
+sleep 30
+
+screen -p 0 -S minecraft -X eval 'stuff "say 資源ワールドの初期化を完了しました"\015'
+screen -p 0 -S minecraft -X eval 'stuff "dynmap fullrender world_mining"\015'
+screen -p 0 -S minecraft -X eval 'stuff "dynmap fullrender world_mining_nether"\015'
+
+__EOS__
+
+  cat << '__EOS__' > /opt/minecraft/shell/reset-the-end.sh
+#!/bin/bash
+
+screen -p 0 -S minecraft -X eval 'stuff "say $(( $RESET_WAIT / 60 ))分後にジ・エンドの初期化を開始します"\015'
+screen -p 0 -S minecraft -X eval 'stuff "say サービスを再起動する為、ログアウトをお願いします"\015'
+
+sudo systemctl stop minecraft.service
+
+sleep 30
+/bin/rm -rf /opt/minecraft/world_the_end
+
+sudo systemctl start minecraft.service
+
+screen -p 0 -S minecraft -X eval 'stuff "dynmap fullrender world_the_end"\015'
+
+__EOS__
+
+  cat << '__EOS__' > /opt/minecraft/shell/rotatelog.sh
+#!/bin/bash
+
+cp -p /opt/minecraft/plugins/CoreProtect/database.db /backup/database.db.`date +%Y%m%d`
+screen -p 0 -S minecraft -X eval 'stuff "co purge t:30d"\015'
+
+__EOS__
+
+  cat << '__EOS__' > /opt/minecraft/shell/backup.sh
+#!/bin/bash
+
+screen -p 0 -S minecraft -X eval 'stuff "say バックアップを開始します"\015'
+screen -p 0 -S minecraft -X eval 'stuff "save-off"\015'
+screen -p 0 -S minecraft -X eval 'stuff "save-all"\015'
+sync
+rsync -aurv --delete /opt/minecraft /backup/history/`date +'%H'`/
+screen -p 0 -S minecraft -X eval 'stuff "save-on"\015'
+screen -p 0 -S minecraft -X eval 'stuff "say バックアップが完了しました"\015'
+
+__EOS__
+
+  chown minecraft:minecraft -R /opt/minecraft
+  for i in {0..23}; do
+    mkdir -p /backup/history/$(printf "%02d\n" $i)/
+  done
+  chown minecraft:minecraft -R /backup
+
+}
+
+for curBash in ${RUNLIST[@]}
+do
+
+    /usr/bin/clear
+
+    case "$curBash" in
+      apcupsd )
+        setup_apcupsd
+        ;;
+      cron )
+        setup_cron
+        ;;
+      ipv4 )
+        setup_ipv4
+        ;;
+      ipv6 )
+        setup_ipv6
+        ;;
+      lm_sensors )
+        setup_lm_sensors
+        ;;
+      localize )
+        setup_localize
+        ;;
+      munin )
+        setup_munin
+        ;;
+      minecraft )
+        setup_minecraft
+        ;;
+      postfix )
+        setup_postfix
+        ;;
+      selinux )
+        setup_selinux
+        ;;
+      service )
+        setup_service
+        ;;
+      ssh )
+        setup_ssh
+        ;;
+      sudo )
+        setup_sudo
+        ;;
+      vim )
+        setup_vim
+        ;;
+      yum )
+        setup_yum
+        ;;
+      * )
+        echo "ERROR:"$curBash
+    esac
+done
+
+/usr/bin/clear
+echo "Finished."
