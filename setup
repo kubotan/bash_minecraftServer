@@ -369,32 +369,6 @@ Host host3.example.net
   UseRoaming no
 __EOS__
 
-  cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config.org
-  cat << '__EOS__' > /etc/ssh/sshd_config
-Port 22
-HostKey /etc/ssh/ssh_host_rsa_key
-HostKey /etc/ssh/ssh_host_ecdsa_key
-HostKey /etc/ssh/ssh_host_ed25519_key
-SyslogFacility AUTHPRIV
-PermitRootLogin yes
-RSAAuthentication yes
-PubkeyAuthentication yes
-AuthorizedKeysFile	.ssh/authorized_keys
-PasswordAuthentication no
-PermitEmptyPasswords no
-ChallengeResponseAuthentication no
-GSSAPIAuthentication yes
-GSSAPICleanupCredentials no
-UsePAM yes
-X11Forwarding yes
-UsePrivilegeSeparation sandbox		# Default for new installations.
-AcceptEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
-AcceptEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
-AcceptEnv LC_IDENTIFICATION LC_ALL LANGUAGE
-AcceptEnv XMODIFIERS
-Subsystem	sftp	/usr/libexec/openssh/sftp-server
-__EOS__
-
   # firewall-cmd --state
   # firewall-cmd --list-all
   # firewall-cmd --list-all-zones
@@ -417,7 +391,15 @@ __EOS__
     serverport="22"
   fi
   sed -i -e "s/22/"$serverport"/g" ~/.ssh/config
-  sed -i -e "s/22/"$serverport"/g" /etc/ssh/sshd_config
+
+  cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config.org
+  sed -i -e "s/#Port 22/Port "$serverport"/g" /etc/ssh/sshd_config
+  sed -i -e "s/#PermitRootLogin yes/PermitRootLogin yes/g" /etc/ssh/sshd_config
+  sed -i -e "s/#RSAAuthentication yes/RSAAuthentication yes/g" /etc/ssh/sshd_config
+  sed -i -e "s/#PubkeyAuthentication yes/PubkeyAuthentication yes/g" /etc/ssh/sshd_config
+  sed -i -e "s/PasswordAuthentication yes/PasswordAuthentication no/g" /etc/ssh/sshd_config
+  sed -i -e "s/#PermitEmptyPasswords no/PermitEmptyPasswords no/g" /etc/ssh/sshd_config
+  
   sed -i -e "s/22/"$serverport"/g" /etc/firewalld/services/ssh.xml
 
   firewall-cmd --reload
