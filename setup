@@ -3,21 +3,21 @@
 /usr/bin/clear
 
 BASHLIST=(
-#  yum
-#  cron
-#  apcupsd
-#  ipv4
-#  ipv6
-#  localize
-#  lm_sensors
-#  vim
-#  sudo
-#  service
-#  selinux
-#  munin
-#  postfix
+  yum
+  cron
+  apcupsd
+  ipv4
+  ipv6
+  localize
+  lm_sensors
+  vim
+  sudo
+  service
+  selinux
+  munin
+  postfix
   ssh
-#  minecraft
+  minecraft
 )
 
 RUNLIST=()
