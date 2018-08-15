@@ -984,5 +984,6 @@ do
 done
 
 /usr/bin/clear
+echo "reboot & systemctl start minecraft"
 echo "Edit and Agree /opt/minecraft/eula.txt"
 echo "Finished."
