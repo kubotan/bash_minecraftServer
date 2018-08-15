@@ -19,4 +19,16 @@
 mkdir setup;cd ./setup
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kubotan/bash_minecraftServer/master/setup)"
 ```
+# サーバー起動
+- ターミナル上で以下のコマンドを実行する
+```
+systemctl start minecraft
+```
+
+# サーバー停止
+- ターミナル上で以下のコマンドを実行する
+```
+systemctl stop minecraft
+```
+
 # 現在、調整中のため、このスクリプトは動作しません。来週中くらいに完成させます。
