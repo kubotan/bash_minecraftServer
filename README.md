@@ -15,6 +15,6 @@
 # 作成手順
 - ターミナル上で以下のコマンドを実行する
 ```
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kubotan/bash_createInstallMedia/master/setup)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kubotan/bash_minecraft_server/master/setup)"
 ```
 # 現在、調整中のため、このスクリプトは動作しません。来週中くらいに完成させます。
