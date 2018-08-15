@@ -790,7 +790,7 @@ setup_minecraft () {
   build_dir='/opt/build_minecraft/'`date +%Y%m%d`'/'
   mkdir -p $build_dir
   cd $build_dir
-  if [ -f ./BuildTools.jar ]
+  if [ ! -f ./BuildTools.jar ]
   then
     wget https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar
   fi
