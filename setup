@@ -797,6 +797,7 @@ setup_minecraft () {
   java -jar ./BuildTools.jar- -rev $mcversion
   cp ./spigot-*.jar /opt/minecraft/
 
+  memTotal=`free -m | grep ^Mem | tr -s ' ' | cut -d ' ' -f 2`
   cat << __EOS__ > /opt/minecraft/environments
 JAVA_OPTIONS='-Dfile.encoding=UTF-8 -Xms$(( $memTotal / 10 * 1))m -Xmx$(( $memTotal / 10 * 9))m -XX:+UseG1GC -XX:MaxGCPauseMillis=50'
 JAR_SPIGOT='spigot-$mcversion.jar'
