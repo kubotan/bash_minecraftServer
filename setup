@@ -1002,4 +1002,5 @@ do
 done
 
 /usr/bin/clear
+echo "Edit and Agree /opt/minecraft/eula.txt"
 echo "Finished."
