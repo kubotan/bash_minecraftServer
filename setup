@@ -155,7 +155,6 @@ setup_localize () {
 setup_munin () {
   echo "Start setup munin.";
 
-  cd /etc/munin/plugins
   cat << '__EOS__' > /etc/munin/plugins/minecraft
 #!/bin/sh
 
@@ -197,7 +196,6 @@ fi
 printf "users.value %i\n" "${PLAYERCOUNT}"
 printf "ramusage.value %3.2f\n" "${MEMGiB}"
 __EOS__
-
 
   ln -s /usr/share/munin/plugins/sensors_ sensors_temp
 
@@ -777,9 +775,6 @@ setup_yum () {
 setup_minecraft () {
   echo "Start setup minecraft.";
 
-  useradd minecraft
-  passwd minecraft
-
   echo -n "ビルドするマインクラフトサーバーのバージョンを指定してください。(default:1.13): "
   read mcversion
   if [ -z "$mcversion" ]
@@ -787,14 +782,15 @@ setup_minecraft () {
     mcversion="1.13"
   fi
 
-  build_dir='/opt/build_minecraft/'`date +%Y%m%d`'/'
-  mkdir -p $build_dir
-  cd $build_dir
   if [ ! -f ./BuildTools.jar ]
   then
     wget https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar
   fi
-  java -jar ./BuildTools.jar- -rev $mcversion
+  build_dir='/opt/build_minecraft/'`date +%Y%m%d`'/'
+  mkdir -p $build_dir
+  cp -p ./BuildTools.jar $build_dir
+  cd $build_dir
+  java -jar ./BuildTools.jar -rev $mcversion
   cp ./spigot-*.jar /opt/minecraft/
 
   memTotal=`free -m | grep ^Mem | tr -s ' ' | cut -d ' ' -f 2`
