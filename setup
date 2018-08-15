@@ -3,21 +3,21 @@
 /usr/bin/clear
 
 BASHLIST=(
-  yum
-  cron
-  apcupsd
-  ipv4
-  ipv6
-  localize
-  lm_sensors
-  vim
-  sudo
-  service
-  selinux
-  munin
-  postfix
+#  yum
+#  cron
+#  apcupsd
+#  ipv4
+#  ipv6
+#  localize
+#  lm_sensors
+#  vim
+#  sudo
+#  service
+#  selinux
+#  munin
+#  postfix
   ssh
-  minecraft
+#  minecraft
 )
 
 RUNLIST=()
@@ -395,9 +395,8 @@ __EOS__
   cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config.org
   sed -i -e "s/#Port 22/Port "$serverport"/g" /etc/ssh/sshd_config
   sed -i -e "s/#PermitRootLogin yes/PermitRootLogin yes/g" /etc/ssh/sshd_config
-  sed -i -e "s/#RSAAuthentication yes/RSAAuthentication yes/g" /etc/ssh/sshd_config
   sed -i -e "s/#PubkeyAuthentication yes/PubkeyAuthentication yes/g" /etc/ssh/sshd_config
-  sed -i -e "s/PasswordAuthentication yes/PasswordAuthentication no/g" /etc/ssh/sshd_config
+  sed -i -e "s/#PasswordAuthentication yes/PasswordAuthentication no/g" /etc/ssh/sshd_config
   sed -i -e "s/#PermitEmptyPasswords no/PermitEmptyPasswords no/g" /etc/ssh/sshd_config
   
   sed -i -e "s/22/"$serverport"/g" /etc/firewalld/services/ssh.xml
