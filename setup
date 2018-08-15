@@ -216,7 +216,7 @@ __EOS__
   ln -s /usr/share/munin/plugins/ping_ /etc/munin/plugins/ping_$chkipaddr
 
   echo -n "muninでping監視したいドメインを指定してください。(default:example.net): "
-  read 
+  read $chkdomain
   if [ -z "$chkdomain" ]
   then
     chkdomain="example.net"
@@ -342,6 +342,9 @@ setup_ssh () {
     cp -p ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
     cp -p ~/.ssh/id_rsa.pub ./id_rsa.pub
     cp -p ~/.ssh/id_rsa ./id_rsa
+  else
+    cp -p ./id_rsa.pub ~/.ssh/id_rsa.pub
+    cp -p ./id_rsa ~/.ssh/id_rsa
   fi
 
   cat << '__EOS__' > ~/.ssh/config
@@ -777,6 +780,13 @@ setup_minecraft () {
   useradd minecraft
   passwd minecraft
 
+  echo -n "ビルドするマインクラフトサーバーのバージョンを指定してください。(default:1.13): "
+  read mcversion
+  if [ -z "$mcversion" ]
+  then
+    mcversion="1.13"
+  fi
+
   build_dir='/opt/build_minecraft/'`date +%Y%m%d`'/'
   mkdir -p $build_dir
   cd $build_dir
@@ -784,12 +794,12 @@ setup_minecraft () {
   then
     wget https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar
   fi
-  java -jar ./BuildTools.jar
+  java -jar ./BuildTools.jar- -rev $mcversion
   cp ./spigot-*.jar /opt/minecraft/
 
-  cat << '__EOS__' > /opt/minecraft/environments
+  cat << __EOS__ > /opt/minecraft/environments
 JAVA_OPTIONS='-Dfile.encoding=UTF-8 -Xms7G -Xmx13G -XX:+UseG1GC -XX:MaxGCPauseMillis=50'
-JAR_SPIGOT='spigot-1.12.2.jar'
+JAR_SPIGOT='spigot-$mcversion.jar'
 JAR_OPTIONS='nogui'
 __EOS__
 
