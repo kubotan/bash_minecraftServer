@@ -798,7 +798,7 @@ setup_minecraft () {
   cp ./spigot-*.jar /opt/minecraft/
 
   cat << __EOS__ > /opt/minecraft/environments
-JAVA_OPTIONS='-Dfile.encoding=UTF-8 -Xms7G -Xmx13G -XX:+UseG1GC -XX:MaxGCPauseMillis=50'
+JAVA_OPTIONS='-Dfile.encoding=UTF-8 -Xms$(( $memTotal / 10 * 1))m -Xmx$(( $memTotal / 10 * 9))m -XX:+UseG1GC -XX:MaxGCPauseMillis=50'
 JAR_SPIGOT='spigot-$mcversion.jar'
 JAR_OPTIONS='nogui'
 __EOS__
