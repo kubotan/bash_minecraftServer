@@ -334,11 +334,14 @@ setup_service () {
 setup_ssh () {
   echo "Start setup ssh.";
 
-  if [ ! -f ~/.ssh/id_rsa.pub ]
+  if [ ! -f ./id_rsa.pub ] \
+    || [ ! -f ./id_rsa ]
   then
     mkdir -p ~/.ssh
     ssh-keygen -t rsa -b 4096      # Create key pair.RSA 4096bit
     cp -p ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+    cp -p ~/.ssh/id_rsa.pub ./id_rsa.pub
+    cp -p ~/.ssh/id_rsa ./id_rsa
   fi
 
   cat << '__EOS__' > ~/.ssh/config
