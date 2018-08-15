@@ -405,7 +405,8 @@ __EOS__
   firewall-cmd --permanent --add-service=ssh
   chmod 600 /root/.ssh
   chmod 600 -R /root/.ssh
-  systemctl restart sshd.service
+  systemctl stop sshd.service
+  systemctl start sshd.service
   echo "*************** SSH PRIVATE KEY START ***************"
   echo " SSH接続する際に必要になりますので、下記は必ず控えを取ってください。"
   cat ~/.ssh/id_rsa
