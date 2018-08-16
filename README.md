@@ -30,5 +30,3 @@ systemctl start minecraft
 ```
 systemctl stop minecraft
 ```
-
-# 現在、調整中のため、このスクリプトは動作しません。来週中くらいに完成させます。
