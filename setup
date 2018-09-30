@@ -755,11 +755,11 @@ setup_yum () {
 setup_minecraft () {
   echo "Start setup minecraft.";
 
-  echo -n "ビルドするマインクラフトサーバーのバージョンを指定してください。(default:1.13): "
+  echo -n "ビルドするマインクラフトサーバーのバージョンを指定してください。(default:1.13.1): "
   read mcversion
   if [ -z "$mcversion" ]
   then
-    mcversion="1.13"
+    mcversion="1.13.1"
   fi
 
   if [ ! -f ./BuildTools.jar ]
