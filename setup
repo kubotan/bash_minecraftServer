@@ -88,7 +88,7 @@ MAILTO="$mail"
 1 */3 * * * bash /opt/minecraft/shell/backup.sh 1> /dev/null
 10 0 * * * bash /opt/minecraft/shell/clearlog.sh 1> /dev/null
 20 5 1 * * bash /opt/minecraft/shell/reset-mining.sh 1> /dev/null
-30 5 */3 * * bash /opt/minecraft/shell/reset-the-end.sh 1> /dev/null
+30 5 * * 1 bash /opt/minecraft/shell/reset-the-end.sh 1> /dev/null
 40 5 1 * * bash /opt/minecraft/shell/rotatelog.sh 1> /dev/null
 __EOS__
 
