@@ -89,7 +89,6 @@ MAILTO="$mail"
 10 0 * * * bash /opt/minecraft/shell/clearlog.sh 1> /dev/null
 20 5 1 * * bash /opt/minecraft/shell/reset-mining.sh 1> /dev/null
 30 5 * * 1 bash /opt/minecraft/shell/reset-the-end.sh 1> /dev/null
-40 5 1 * * bash /opt/minecraft/shell/rotatelog.sh 1> /dev/null
 __EOS__
 
   useradd minecraft
@@ -851,6 +850,8 @@ __EOS__
 #!/bin/bash
 
 find /opt/minecraft/logs/*.log.gz -mtime +31 | xargs /bin/rm -f
+screen -p 0 -S minecraft -X eval 'stuff "co purge t:30d"\015'
+
 __EOS__
 
   cat << '__EOS__' > /opt/minecraft/shell/reset-mining.sh
@@ -894,14 +895,6 @@ sleep 30
 sudo systemctl start minecraft.service
 
 screen -p 0 -S minecraft -X eval 'stuff "dynmap fullrender world_the_end"\015'
-
-__EOS__
-
-  cat << '__EOS__' > /opt/minecraft/shell/rotatelog.sh
-#!/bin/bash
-
-cp -p /opt/minecraft/plugins/CoreProtect/database.db /backup/database.db.`date +%Y%m%d`
-screen -p 0 -S minecraft -X eval 'stuff "co purge t:30d"\015'
 
 __EOS__
 
