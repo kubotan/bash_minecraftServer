@@ -195,7 +195,7 @@ fi
 printf "users.value %i\n" "${PLAYERCOUNT}"
 printf "ramusage.value %3.2f\n" "${MEMGiB}"
 __EOS__
-
+  chmod 755 /etc/munin/plugins/minecraft
   ln -s /usr/share/munin/plugins/sensors_ sensors_temp
 
   if [ ! -f ./apcupsd_ww ]
@@ -203,7 +203,7 @@ __EOS__
     wget https://raw.githubusercontent.com/munin-monitoring/contrib/master/plugins/power/apcupsd_ww
   fi
   cp -p ./apcupsd_ww /etc/munin/plugins/apcupsd_ww
-
+  chmod 755 /etc/munin/plugins/apcupsd_ww
   echo -n "muninでping監視したいゲートウェイアドレスを指定してください。(default:192.168.1.1): "
   read chkipaddr
   if [ -z "$chkipaddr" ]
