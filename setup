@@ -448,6 +448,12 @@ __EOS__
 setup_yum () {
   echo "Start setup yum.";
 
+  if [ ! -f ./unzip-6.0-19.el7.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ unzip
+  fi
+  yum -y localinstall ./unzip-6.0-19.el7.x86_64.rpm
+
   if [ ! -f ./wget-1.14-15.el7_4.1.x86_64.rpm ]
   then
     yum install --downloadonly --downloaddir=./ wget
