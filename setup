@@ -448,6 +448,12 @@ __EOS__
 setup_yum () {
   echo "Start setup yum.";
 
+  if [ ! -f ./java-1.8.0-openjdk-devel-1.8.0.201.b09-2.el7_6.x86_64.rpm ]
+  then
+    yum install --downloadonly --downloaddir=./ java-1.8.0-openjdk-devel
+  fi
+  yum -y localinstall ./java-1.8.0-openjdk-devel-1.8.0.201.b09-2.el7_6.x86_64.rpm
+
   if [ ! -f ./unzip-6.0-19.el7.x86_64.rpm ]
   then
     yum install --downloadonly --downloaddir=./ unzip
@@ -809,11 +815,19 @@ __EOS__
   <description>Minecraft Dynmap</description>
   <port protocol="tcp" port="8123"/>
 </service>
+  cat << '__EOS__' > /etc/firewalld/services/jstatd.xml
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>jstatd</short>
+  <description>jstatd</description>
+  <port protocol="tcp" port="1099"/>
+</service>
 __EOS__
   firewall-cmd --reload
   firewall-cmd --permanent --add-service=minecraft
   firewall-cmd --permanent --add-service=minecraft-votifier
   firewall-cmd --permanent --add-service=minecraft-dynmap
+  firewall-cmd --permanent --add-service=jstatd
 
   cat << '__EOS__' > /etc/systemd/system/minecraft.service
 [Unit]
