@@ -770,7 +770,7 @@ setup_minecraft () {
   read mcversion
   if [ -z "$mcversion" ]
   then
-    mcversion="1.13.1"
+    mcversion="1.13.2"
   fi
 
   if [ ! -f ./BuildTools.jar ]
@@ -787,7 +787,7 @@ setup_minecraft () {
 
   memTotal=`free -m | grep ^Mem | tr -s ' ' | cut -d ' ' -f 2`
   cat << __EOS__ > /opt/minecraft/environments
-JAVA_OPTIONS='-Dfile.encoding=UTF-8 -Xms$(( $memTotal / 10 * 1))m -Xmx$(( $memTotal / 10 * 9))m -XX:+UseG1GC -XX:MaxGCPauseMillis=50'
+JAVA_OPTIONS='-Dfile.encoding=UTF-8 -Xms$(( $memTotal / 10 * 1))m -Xmx$(( $memTotal / 10 * 7))m -XX:+UseG1GC -XX:MaxGCPauseMillis=50'
 JAR_SPIGOT='spigot-$mcversion.jar'
 JAR_OPTIONS='nogui'
 __EOS__
