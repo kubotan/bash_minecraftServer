@@ -815,19 +815,11 @@ __EOS__
   <description>Minecraft Dynmap</description>
   <port protocol="tcp" port="8123"/>
 </service>
-  cat << '__EOS__' > /etc/firewalld/services/jstatd.xml
-<?xml version="1.0" encoding="utf-8"?>
-<service>
-  <short>jstatd</short>
-  <description>jstatd</description>
-  <port protocol="tcp" port="1099"/>
-</service>
 __EOS__
   firewall-cmd --reload
   firewall-cmd --permanent --add-service=minecraft
   firewall-cmd --permanent --add-service=minecraft-votifier
   firewall-cmd --permanent --add-service=minecraft-dynmap
-  firewall-cmd --permanent --add-service=jstatd
 
   cat << '__EOS__' > /etc/systemd/system/minecraft.service
 [Unit]
