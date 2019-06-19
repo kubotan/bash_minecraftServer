@@ -918,16 +918,6 @@ screen -p 0 -S minecraft -X eval 'stuff "save-off"\015'
 screen -p 0 -S minecraft -X eval 'stuff "save-all"\015'
 sync
 rsync -aurv --delete --exclude /opt/minecraft/plugins/CoreProtect/database.db /opt/minecraft /backup/history/`date +'%H'`/
-if [ `date +%d` = "01" -a `date +%H` != "00" -a `date +%H` != "01" -a ! -e /backup/minecraft.`date +%Y%m%d`.tar.gz ]
-then
-  cd /backup/history/00
-  tar cfvz minecraft.`date +%Y%m%d`.tar.gz  ./minecraft
-  cp ./minecraft.`date +%Y%m%d`.tar.gz /backup/minecraft.`date +%Y%m%d`.tar.gz
-  /bin/rm -f ./minecraft.`date +%Y%m%d`.tar.gz
-  find /backup/*.tar.gz -ctime +90 -exec rm -f {} \;
-  cp -p /opt/minecraft/plugins/CoreProtect/database.db /backup/database.db.`date +%Y%m%d`
-  find /backup/*.db.???????? -ctime +90 -exec rm -f {} \;
-fi
 screen -p 0 -S minecraft -X eval 'stuff "save-on"\015'
 screen -p 0 -S minecraft -X eval 'stuff "say バックアップが完了しました"\015'
 
