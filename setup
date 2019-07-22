@@ -396,7 +396,7 @@ __EOS__
 
   echo -n "sshでrootログインを許可しますか?(本番運用時はrootログインを停止することを推奨します) [Y/n](default:Y): "
   read rootlogin
-  if [ -z "$rootlogin" -o "$rootlogin" = "Y" ]
+  if [ -z "$rootlogin" -o "$rootlogin" = "Y" -o "$rootlogin" = "y" ]
   then
     sed -i -e "s/#PermitRootLogin yes/PermitRootLogin yes/g" /etc/ssh/sshd_config
   else
