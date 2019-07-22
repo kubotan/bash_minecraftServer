@@ -448,319 +448,77 @@ __EOS__
 setup_yum () {
   echo "Start setup yum.";
 
-  if [ ! -f ./java-1.8.0-openjdk-devel-1.8.0.201.b09-2.el7_6.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ java-1.8.0-openjdk-devel
-  fi
-  yum -y localinstall ./java-1.8.0-openjdk-devel-1.8.0.201.b09-2.el7_6.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ java-1.8.0-openjdk-devel
+  yum -y install java-1.8.0-openjdk-devel
 
-  if [ ! -f ./unzip-6.0-19.el7.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ unzip
-  fi
-  yum -y localinstall ./unzip-6.0-19.el7.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ unzip
+  yum -y install unzip
 
-  if [ ! -f ./wget-1.14-15.el7_4.1.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ wget
-  fi
-  yum -y localinstall ./wget-*.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ wget
+  yum -y install wget
 
-  if [ ! -f ./bind-libs-9.9.4-61.el7.x86_64.rpm ] \
-    || [ ! -f ./bind-utils-9.9.4-61.el7.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ bind-utils
-  fi
-  yum -y localinstall ./bind-utils-*.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ bind-utils
+  yum -y install bind-utils
 
-  if [ ! -f ./expect-5.45-14.el7_1.x86_64.rpm ] \
-    || [ ! -f ./tcl-8.5.13-8.el7.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ expect
-  fi
-  yum -y localinstall ./expect-*.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ expect
+  yum -y install expect
 
-  if [ ! -f ./bc-1.06.95-13.el7.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ bc
-  fi
-  yum -y localinstall ./bc-*.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ bc
+  yum -y install bc
     
-  if [ ! -f ./glibc-headers-2.17-222.el7.x86_64.rpm ] \
-    || [ ! -f ./libgcc-4.8.5-28.el7_5.1.x86_64.rpm ] \
-    || [ ! -f ./glibc-devel-2.17-222.el7.x86_64.rpm ] \
-    || [ ! -f ./libgomp-4.8.5-28.el7_5.1.x86_64.rpm ] \
-    || [ ! -f ./libmpc-1.0.1-3.el7.x86_64.rpm ] \
-    || [ ! -f ./mpfr-3.1.1-4.el7.x86_64.rpm ] \
-    || [ ! -f ./cpp-4.8.5-28.el7_5.1.x86_64.rpm ] \
-    || [ ! -f ./kernel-headers-3.10.0-862.9.1.el7.x86_64.rpm ] \
-    || [ ! -f ./gcc-4.8.5-28.el7_5.1.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ gcc
-  fi
-  yum -y localinstall ./glibc-headers-*.x86_64.rpm ./libgcc-*.x86_64.rpm \
-    ./glibc-devel-*.x86_64.rpm ./libgomp-*.x86_64.rpm ./libmpc-*.x86_64.rpm ./mpfr-*.x86_64.rpm \
-    ./cpp-*.x86_64.rpm ./kernel-headers-*.x86_64.rpm ./gcc-*.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ gcc
+  yum -y install gcc
 
-  if [ ! -f ./libstdc++-4.8.5-28.el7_5.1.x86_64.rpm ] \
-    || [ ! -f ./libstdc++-devel-4.8.5-28.el7_5.1.x86_64.rpm ] \
-    || [ ! -f ./gcc-c++-4.8.5-28.el7_5.1.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ gcc-c++
-  fi
-  yum -y localinstall ./libstdc++-*.x86_64.rpm ./libstdc++-devel-*.x86_64.rpm ./gcc-c++-*.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ gcc-c++
+  yum -y install gcc-c++
 
-  if [ ! -f ./gdb-7.6.1-110.el7.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ gdb
-  fi
-  yum -y localinstall ./gdb-*.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ gdb
+  yum -y install gdb
 
-  if [ ! -f ./lm_sensors-3.4.0-4.20160601gitf9185e5.el7.x86_64.rpm  ]
-  then
-    yum install --downloadonly --downloaddir=./ lm_sensors
-  fi
-  yum -y localinstall ./lm_sensors-*.x86_64.rpm 
+  yum install --downloadonly --downloaddir=./ lm_sensors
+  yum -y install lm_sensors
 
-  if [ ! -f ./tcpdump-4.9.2-3.el7.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ tcpdump
-  fi
-  yum -y localinstall ./tcpdump-*.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ tcpdump
+  yum -y install tcpdump
 
+  yum install --downloadonly --downloaddir=./ telnet
+  yum -y install telnet
 
-  if [ ! -f ./telnet-0.17-64.el7.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ telnet
-  fi
-  yum -y localinstall ./telnet-*.x86_64.rpm
-
-  if [ ! -f ./iotop-0.6-2.el7.noarch.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ iotop
-  fi
-  yum -y localinstall ./iotop-*.noarch.rpm
+  yum install --downloadonly --downloaddir=./ iotop
+  yum -y install iotop
  
-  if [ ! -f ./GeoIP-data-1.5.0-11.el7.noarch.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ GeoIP-data
-  fi
-  yum -y localinstall ./GeoIP-data-*.noarch.rpm
+  yum install --downloadonly --downloaddir=./ GeoIP-data
+  yum -y install GeoIP-data
  
-  if [ ! -f ./GeoIP-update-1.5.0-11.el7.noarch.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ GeoIP-update
-  fi
-  yum -y localinstall ./GeoIP-update-*.noarch.rpm
+  yum install --downloadonly --downloaddir=./ GeoIP-update
+  yum -y install GeoIP-update
 
-  if [ ! -f ./perl-Error-0.17020-2.el7.noarch.rpm ] \
-    || [ ! -f ./perl-TermReadKey-2.30-20.el7.x86_64.rpm ] \
-    || [ ! -f ./libgnome-keyring-3.12.0-1.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Git-1.8.3.1-14.el7_5.noarch.rpm ] \
-    || [ ! -f ./rsync-3.1.2-4.el7.x86_64.rpm ] \
-    || [ ! -f ./git-1.8.3.1-14.el7_5.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ git
-  fi
-  yum -y localinstall ./perl-Error-0.17020-2.el7.noarch.rpm ./perl-TermReadKey-2.30-20.el7.x86_64.rpm \
-    ./libgnome-keyring-3.12.0-1.el7.x86_64.rpm ./perl-Git-1.8.3.1-14.el7_5.noarch.rpm \
-    ./rsync-3.1.2-4.el7.x86_64.rpm ./git-1.8.3.1-14.el7_5.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ git
+  yum -y install git
+  
+  yum install --downloadonly --downloaddir=./ java-1.8.0-openjdk
+  yum -y install java-1.8.0-openjdk
 
-  if [ ! -f ./fontpackages-filesystem-1.44-8.el7.noarch.rpm ] \
-    || [ ! -f ./copy-jdk-configs-3.3-10.el7_5.noarch.rpm ] \
-    || [ ! -f ./giflib-4.1.6-9.el7.x86_64.rpm ] \
-    || [ ! -f ./javapackages-tools-3.4.1-11.el7.noarch.rpm ] \
-    || [ ! -f ./java-1.8.0-openjdk-1.8.0.181-3.b13.el7_5.x86_64.rpm ] \
-    || [ ! -f ./libSM-1.2.2-2.el7.x86_64.rpm ] \
-    || [ ! -f ./fontconfig-2.10.95-11.el7.x86_64.rpm ] \
-    || [ ! -f ./libICE-1.0.9-9.el7.x86_64.rpm ] \
-    || [ ! -f ./libXau-1.0.8-2.1.el7.x86_64.rpm ] \
-    || [ ! -f ./libXcomposite-0.4.4-4.1.el7.x86_64.rpm ] \
-    || [ ! -f ./libX11-common-1.6.5-1.el7.noarch.rpm ] \
-    || [ ! -f ./libXext-1.3.3-3.el7.x86_64.rpm ] \
-    || [ ! -f ./libXi-1.7.9-1.el7.x86_64.rpm ] \
-    || [ ! -f ./libX11-1.6.5-1.el7.x86_64.rpm ] \
-    || [ ! -f ./libXtst-1.2.3-1.el7.x86_64.rpm ] \
-    || [ ! -f ./libXrender-0.9.10-1.el7.x86_64.rpm ] \
-    || [ ! -f ./libfontenc-1.1.3-3.el7.x86_64.rpm ] \
-    || [ ! -f ./libXfont-1.5.2-1.el7.x86_64.rpm ] \
-    || [ ! -f ./libjpeg-turbo-1.2.90-5.el7.x86_64.rpm ] \
-    || [ ! -f ./lksctp-tools-1.0.17-2.el7.x86_64.rpm ] \
-    || [ ! -f ./libpng-1.5.13-7.el7_2.x86_64.rpm ] \
-    || [ ! -f ./libxslt-1.1.28-5.el7.x86_64.rpm ] \
-    || [ ! -f ./lyx-fonts-2.2.3-1.el7.noarch.rpm ] \
-    || [ ! -f ./nss-softokn-3.36.0-5.el7_5.x86_64.rpm ] \
-    || [ ! -f ./nss-3.36.0-5.el7_5.x86_64.rpm ] \
-    || [ ! -f ./nss-softokn-freebl-3.36.0-5.el7_5.x86_64.rpm ] \
-    || [ ! -f ./nspr-4.19.0-1.el7_5.x86_64.rpm ] \
-    || [ ! -f ./nss-sysinit-3.36.0-5.el7_5.x86_64.rpm ] \
-    || [ ! -f ./nss-util-3.36.0-1.el7_5.x86_64.rpm ] \
-    || [ ! -f ./libxcb-1.12-1.el7.x86_64.rpm ] \
-    || [ ! -f ./nss-tools-3.36.0-5.el7_5.x86_64.rpm ] \
-    || [ ! -f ./tzdata-java-2018e-3.el7.noarch.rpm ] \
-    || [ ! -f ./ttmkfdir-3.0.9-42.el7.x86_64.rpm ] \
-    || [ ! -f ./python-lxml-3.2.1-4.el7.x86_64.rpm ] \
-    || [ ! -f ./xorg-x11-font-utils-7.5-20.el7.x86_64.rpm ] \
-    || [ ! -f ./python-javapackages-3.4.1-11.el7.noarch.rpm ] \
-    || [ ! -f ./xorg-x11-fonts-Type1-7.5-9.el7.noarch.rpm ] \
-    || [ ! -f ./java-1.8.0-openjdk-headless-1.8.0.181-3.b13.el7_5.x86_64.rpm ]        
-  then
-    yum install --downloadonly --downloaddir=./ java-1.8.0-openjdk
-  fi
-  yum -y localinstall ./fontpackages-filesystem-1.44-8.el7.noarch.rpm ./copy-jdk-configs-3.3-10.el7_5.noarch.rpm \
-    ./giflib-4.1.6-9.el7.x86_64.rpm ./javapackages-tools-3.4.1-11.el7.noarch.rpm \
-   ./java-1.8.0-openjdk-1.8.0.181-3.b13.el7_5.x86_64.rpm ./libSM-1.2.2-2.el7.x86_64.rpm \
-   ./fontconfig-2.10.95-11.el7.x86_64.rpm ./libICE-1.0.9-9.el7.x86_64.rpm \
-   ./libXau-1.0.8-2.1.el7.x86_64.rpm ./libXcomposite-0.4.4-4.1.el7.x86_64.rpm \
-   ./libX11-common-1.6.5-1.el7.noarch.rpm ./libXext-1.3.3-3.el7.x86_64.rpm \
-   ./libXi-1.7.9-1.el7.x86_64.rpm ./libX11-1.6.5-1.el7.x86_64.rpm \
-   ./libXtst-1.2.3-1.el7.x86_64.rpm ./libXrender-0.9.10-1.el7.x86_64.rpm \
-   ./libfontenc-1.1.3-3.el7.x86_64.rpm ./libXfont-1.5.2-1.el7.x86_64.rpm \
-   ./libjpeg-turbo-1.2.90-5.el7.x86_64.rpm ./lksctp-tools-1.0.17-2.el7.x86_64.rpm \
-   ./libpng-1.5.13-7.el7_2.x86_64.rpm ./libxslt-1.1.28-5.el7.x86_64.rpm \
-   ./lyx-fonts-2.2.3-1.el7.noarch.rpm ./nss-softokn-3.36.0-5.el7_5.x86_64.rpm \
-   ./nss-3.36.0-5.el7_5.x86_64.rpm ./nss-softokn-freebl-3.36.0-5.el7_5.x86_64.rpm \
-   ./nspr-4.19.0-1.el7_5.x86_64.rpm ./nss-sysinit-3.36.0-5.el7_5.x86_64.rpm \
-   ./nss-util-3.36.0-1.el7_5.x86_64.rpm ./libxcb-1.12-1.el7.x86_64.rpm \
-   ./nss-tools-3.36.0-5.el7_5.x86_64.rpm ./tzdata-java-2018e-3.el7.noarch.rpm \
-   ./ttmkfdir-3.0.9-42.el7.x86_64.rpm ./python-lxml-3.2.1-4.el7.x86_64.rpm \
-   ./xorg-x11-font-utils-7.5-20.el7.x86_64.rpm ./python-javapackages-3.4.1-11.el7.noarch.rpm \
-   ./xorg-x11-fonts-Type1-7.5-9.el7.noarch.rpm ./java-1.8.0-openjdk-headless-1.8.0.181-3.b13.el7_5.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ screen
+  yum -y install screen
 
-  if [ ! -f ./screen-4.1.0-0.25.20120314git3c2946.el7.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ screen
-  fi
-  yum -y localinstall ./screen-*.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ vim
+  yum -y install vim
 
-  if [ ! -f ./vim-filesystem-7.4.160-4.el7.x86_64.rpm ] \
-    || [ ! -f ./gpm-libs-1.20.7-5.el7.x86_64.rpm ] \
-    || [ ! -f ./vim-enhanced-7.4.160-4.el7.x86_64.rpm ] \
-    || [ ! -f ./vim-common-7.4.160-4.el7.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ vim
-  fi
-  yum -y localinstall ./vim-filesystem-*.x86_64.rpm ./gpm-libs-*.x86_64.rpm ./vim-enhanced-*.x86_64.rpm ./vim-common-*.x86_64.rpm
-
-  if [ ! -f ./epel-release-latest-7.noarch.rpm ]
-  then
-    wget http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-  fi
+  wget http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
   rpm -ivh ./epel-release-latest-7.noarch.rpm
 
-  if [ ! -f ./apcupsd-3.14.14-5.el7.x86_64.rpm ] \
-    || [ ! -f ./libusb-0.1.4-3.el7.x86_64.rpm ] \
-    || [ ! -f ./libusbx-1.0.21-1.el7.x86_64.rpm ] \
-    || [ ! -f ./mailx-12.5-19.el7.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ --enablerepo=epel apcupsd
-  fi
-  yum -y localinstall ./apcupsd-*.x86_64.rpm ./libusb-*.x86_64.rpm ./libusbx-*.x86_64.rpm ./mailx-*.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ --enablerepo=epel apcupsd
+  yum -y install apcupsd
 
-  if [ ! -f ./iftop-1.0-0.14.pre4.el7.x86_64.rpm ] \
-    || [ ! -f ./libpcap-1.5.3-11.el7.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ --enablerepo=epel iftop  
-  fi
-  yum -y localinstall ./iftop-*.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ --enablerepo=epel iftop  
+  yum -y install iftop
 
-  if [ ! -f ./lm_sensors-libs-3.4.0-4.20160601gitf9185e5.el7.x86_64.rpm ] \
-    || [ ! -f ./mailcap-2.1.41-2.el7.noarch.rpm ] \
-    || [ ! -f ./hdparm-9.43-5.el7.x86_64.rpm ] \
-    || [ ! -f ./munin-common-2.0.33-1.el7.noarch.rpm ] \
-    || [ ! -f ./munin-node-2.0.33-1.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Business-ISBN-2.06-2.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Carp-1.26-244.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Business-ISBN-Data-20120719.001-2.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Compress-Raw-Zlib-2.061-4.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Compress-Raw-Bzip2-2.061-3.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-5.16.3-292.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-DBD-Pg-2.19.3-4.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Data-Dumper-2.145-3.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Crypt-DES-2.05-20.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Digest-1.17-245.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Digest-MD5-2.52-3.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-DBI-1.627-4.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Digest-HMAC-1.03-5.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Digest-SHA-5.85-4.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Digest-SHA1-2.13-9.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-File-Listing-6.04-7.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Encode-2.51-7.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-File-Path-2.09-2.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Filter-1.49-3.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-File-Temp-0.23.01-3.el7.noarch.rpm ] \
-    || [ ! -f ./perl-HTML-Parser-3.71-4.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Getopt-Long-2.40-3.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Exporter-5.68-3.el7.noarch.rpm ] \
-    || [ ! -f ./perl-HTTP-Cookies-6.01-5.el7.noarch.rpm ] \
-    || [ ! -f ./perl-HTML-Tagset-3.20-15.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Encode-Locale-1.03-5.el7.noarch.rpm ] \
-    || [ ! -f ./perl-HTTP-Date-6.02-8.el7.noarch.rpm ] \
-    || [ ! -f ./perl-HTTP-Daemon-6.01-7.el7.noarch.rpm ] \
-    || [ ! -f ./perl-IO-Compress-2.061-2.el7.noarch.rpm ] \
-    || [ ! -f ./perl-HTTP-Negotiate-6.01-5.el7.noarch.rpm ] \
-    || [ ! -f ./perl-HTTP-Tiny-0.033-3.el7.noarch.rpm ] \
-    || [ ! -f ./perl-IO-HTML-1.00-2.el7.noarch.rpm ] \
-    || [ ! -f ./perl-IO-Multiplex-1.13-6.el7.noarch.rpm ] \
-    || [ ! -f ./perl-IO-Socket-SSL-1.94-7.el7.noarch.rpm ] \
-    || [ ! -f ./perl-LWP-MediaTypes-6.02-2.el7.noarch.rpm ] \
-    || [ ! -f ./perl-List-MoreUtils-0.33-9.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-HTTP-Message-6.06-6.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Mozilla-CA-20130114-5.el7.noarch.rpm ] \
-    || [ ! -f ./perl-IO-Socket-IP-0.21-5.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Net-CIDR-0.18-1.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Net-LibIDN-0.12-15.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Net-Daemon-0.48-5.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Net-DNS-0.72-6.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Net-HTTP-6.06-2.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Net-SNMP-6.0.1-7.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Net-SSLeay-1.55-6.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Pod-Perldoc-3.20-4.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Net-Server-2.007-2.el7.noarch.rpm ] \
-    || [ ! -f ./perl-PathTools-3.40-5.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Pod-Usage-1.63-3.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Pod-Simple-3.28-4.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Pod-Escapes-1.04-292.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Scalar-List-Utils-1.27-248.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-PlRPC-0.2020-14.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Socket-2.010-4.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Socket6-0.23-15.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Text-ParseWords-3.29-4.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Sys-Syslog-0.33-3.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Time-HiRes-1.9725-3.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-Time-Local-1.2300-2.el7.noarch.rpm ] \
-    || [ ! -f ./perl-TimeDate-2.30-2.el7.noarch.rpm ] \
-    || [ ! -f ./perl-URI-1.60-9.el7.noarch.rpm ] \
-    || [ ! -f ./perl-WWW-RobotRules-6.02-5.el7.noarch.rpm ] \
-    || [ ! -f ./perl-Storable-2.45-3.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-XML-NamespaceSupport-1.11-10.el7.noarch.rpm ] \
-    || [ ! -f ./perl-XML-LibXML-2.0018-5.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-XML-SAX-0.99-9.el7.noarch.rpm ] \
-    || [ ! -f ./perl-XML-Parser-2.41-10.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-XML-SAX-Base-1.08-7.el7.noarch.rpm ] \
-    || [ ! -f ./perl-constant-1.27-2.el7.noarch.rpm ] \
-    || [ ! -f ./perl-parent-0.225-244.el7.noarch.rpm ] \
-    || [ ! -f ./perl-libwww-perl-6.05-2.el7.noarch.rpm ] \
-    || [ ! -f ./perl-macros-5.16.3-292.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-threads-1.87-4.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-podlators-2.5.1-3.el7.noarch.rpm ] \
-    || [ ! -f ./perl-threads-shared-1.43-6.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-libs-5.16.3-292.el7.x86_64.rpm ] \
-    || [ ! -f ./perl-version-0.99.07-3.el7.x86_64.rpm ] \
-    || [ ! -f ./postgresql-libs-9.2.23-3.el7_4.x86_64.rpm ] \
-    || [ ! -f ./sysstat-10.1.5-13.el7.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ --enablerepo=epel munin-node
-  fi
-  yum -y localinstall ./lm_sensors-libs-*.x86_64.rpm ./mailcap-*.noarch.rpm \
-    ./hdparm-*.x86_64.rpm ./munin-common-*.noarch.rpm ./munin-node-*.noarch.rpm ./perl-*.noarch.rpm \
-    ./perl-*.x86_64.rpm ./postgresql-libs-*.x86_64.rpm ./sysstat-*.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ --enablerepo=epel munin-node
+  yum -y install munin-node
 
-  if [ ! -f ./nkf-2.1.3-5.el7.x86_64.rpm ]
-  then
-    yum install --downloadonly --downloaddir=./ --enablerepo=epel nkf
-  fi
-  yum -y localinstall ./nkf-*.x86_64.rpm
+  yum install --downloadonly --downloaddir=./ --enablerepo=epel nkf
+  yum -y install nkf
 }
 
 setup_minecraft () {
