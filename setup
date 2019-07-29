@@ -518,16 +518,16 @@ setup_yum () {
   rpm -ivh ./epel-release-latest-7.noarch.rpm
 
   yum install --downloadonly --downloaddir=./ --enablerepo=epel apcupsd
-  yum -y install apcupsd
+  yum -y install --enablerepo=epel apcupsd
 
   yum install --downloadonly --downloaddir=./ --enablerepo=epel iftop  
-  yum -y install iftop
+  yum -y install --enablerepo=epel iftop
 
   yum install --downloadonly --downloaddir=./ --enablerepo=epel munin-node
-  yum -y install munin-node
+  yum -y install --enablerepo=epel munin-node
 
   yum install --downloadonly --downloaddir=./ --enablerepo=epel nkf
-  yum -y install nkf
+  yum -y install --enablerepo=epel nkf
 }
 
 setup_minecraft () {
